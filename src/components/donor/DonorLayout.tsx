@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Home,
   PlusCircle,
@@ -8,10 +8,13 @@ import {
   BarChart2,
   MoreHorizontal,
   Leaf,
+  LogOut,
+  Store,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Logo } from "../Logo";
+import { useAuth } from "../../context/AuthContext";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -20,6 +23,13 @@ export function cn(...inputs: ClassValue[]) {
 export function DonorLayout() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { userProfile, currentUser, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/", { replace: true });
+  };
 
   const navItems = [
     { name: "Dashboard", path: "/donor/dashboard", icon: Home },
@@ -29,15 +39,41 @@ export function DonorLayout() {
     { name: "Analytics", path: "/donor/analytics", icon: BarChart2 },
   ];
 
+  const donorName = userProfile?.orgName || userProfile?.displayName || "Green Bites Bistro";
+  const donorEmail = userProfile?.email || currentUser?.email || "donor@resqmeal.org";
+
   return (
     <div className="flex h-screen bg-[#f8faf8] overflow-hidden">
       {/* Sidebar (Desktop) */}
       <aside className="w-64 bg-white border-r border-gray-100 flex flex-col hidden md:flex flex-shrink-0 z-20">
-        <div className="h-28 flex items-center justify-center border-b border-transparent mt-4">
+        <div className="h-24 flex items-center justify-center border-b border-gray-50 px-4">
           <Logo className="scale-75 origin-center" variant="circle" />
         </div>
 
-        <nav className="flex-1 py-8 px-4 space-y-2 overflow-y-auto">
+        {/* Donor Profile Chip in Sidebar */}
+        <div className="p-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/60">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-resq-dark text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
+              {donorName.substring(0, 2).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-resq-dark truncate">{donorName}</p>
+              <p className="text-[10px] text-gray-500 truncate flex items-center gap-1">
+                <Store className="w-3 h-3 text-resq-green" />
+                Verified Donor
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            title="Sign Out"
+            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+
+        <nav className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location.pathname.startsWith(item.path);
             const Icon = item.icon;
@@ -48,7 +84,7 @@ export function DonorLayout() {
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-[#eef3ea] text-resq-dark"
+                    ? "bg-[#eef3ea] text-resq-dark font-semibold shadow-xs"
                     : "text-gray-500 hover:text-resq-dark hover:bg-gray-50",
                 )}
               >
@@ -64,38 +100,18 @@ export function DonorLayout() {
           })}
         </nav>
 
-        <div className="p-4 mb-4">
-          <div className="bg-[#f0f5ee] rounded-2xl p-5 relative overflow-hidden h-40 flex flex-col justify-between">
-            <svg
-              className="absolute bottom-0 right-0 w-24 h-24 opacity-60 text-[#bcd0b2] pointer-events-none"
-              viewBox="0 0 100 100"
-              fill="currentColor"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M 60,100 C 60,80 80,60 100,60 C 100,80 80,100 60,100 Z" />
-              <path
-                d="M 40,100 C 40,70 70,40 100,40 C 100,70 70,100 40,100 Z"
-                opacity="0.6"
-              />
-              <path
-                d="M 80,100 C 80,50 100,20 100,20 C 100,50 100,100 80,100 Z"
-                opacity="0.3"
-              />
-            </svg>
-            <div className="w-8 h-8 bg-resq-dark text-white rounded-full flex items-center justify-center mb-1">
-              <Leaf className="w-4 h-4 fill-white" />
+        {/* Environmental impact note */}
+        <div className="p-4 mb-2">
+          <div className="bg-[#f0f5ee] rounded-2xl p-4 relative overflow-hidden flex flex-col justify-between">
+            <div className="w-7 h-7 bg-resq-dark text-white rounded-full flex items-center justify-center mb-1">
+              <Leaf className="w-3.5 h-3.5 fill-white" />
             </div>
             <div>
-              <p className="text-sm font-bold text-resq-dark mb-2 leading-tight">
-                Together, we're
-                <br />
-                creating a zero-
-                <br />
-                waste future.
+              <p className="text-xs font-bold text-resq-dark mb-1 leading-tight">
+                Zero Waste Champion
               </p>
-              <p className="text-[11px] font-medium text-resq-dark/70 relative z-10 leading-tight">
-                Thank you for making
-                <br />a difference!
+              <p className="text-[10px] font-medium text-resq-dark/70 leading-tight">
+                Your surplus food feeds real people every single day.
               </p>
             </div>
           </div>
@@ -116,13 +132,22 @@ export function DonorLayout() {
             </button>
             <Logo className="text-xl" />
           </div>
-          <NavLink
-            to="/donor/donate"
-            className="bg-resq-dark text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>Donate</span>
-          </NavLink>
+          <div className="flex items-center gap-2">
+            <NavLink
+              to="/donor/donate"
+              className="bg-resq-dark text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>Donate</span>
+            </NavLink>
+            <button
+              onClick={handleLogout}
+              className="p-1.5 text-gray-400 hover:text-red-600"
+              title="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
@@ -176,7 +201,12 @@ export function DonorLayout() {
               </button>
             </div>
 
-            <nav className="flex-1 py-6 space-y-2 overflow-y-auto">
+            <div className="py-4 border-b border-gray-100">
+              <p className="text-xs font-bold text-resq-dark">{donorName}</p>
+              <p className="text-[11px] text-gray-400">{donorEmail}</p>
+            </div>
+
+            <nav className="flex-1 py-4 space-y-1.5 overflow-y-auto">
               {navItems.map((item) => {
                 const isActive = location.pathname.startsWith(item.path);
                 const Icon = item.icon;
@@ -186,7 +216,7 @@ export function DonorLayout() {
                     to={item.path}
                     onClick={() => setMobileDrawerOpen(false)}
                     className={cn(
-                      "flex items-center gap-4 px-4 py-3 rounded-xl text-base font-medium transition-colors min-h-[44px]",
+                      "flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-colors min-h-[44px]",
                       isActive
                         ? "bg-[#eef3ea] text-resq-dark font-semibold"
                         : "text-gray-600 hover:bg-gray-50",
@@ -199,11 +229,18 @@ export function DonorLayout() {
               })}
             </nav>
 
-            <div className="pt-4 border-t border-gray-100">
+            <div className="pt-4 border-t border-gray-100 space-y-2">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
               <NavLink
                 to="/"
                 onClick={() => setMobileDrawerOpen(false)}
-                className="flex items-center justify-center w-full min-h-[44px] py-2.5 px-4 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100"
+                className="flex items-center justify-center w-full min-h-[44px] py-2 px-4 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-100"
               >
                 ← Return to Home
               </NavLink>

@@ -15,10 +15,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { LandscapeFooter } from "../LandscapeFooter";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 
 export function DonorDonate() {
   const navigate = useNavigate();
+  const { currentUser, userProfile } = useAuth();
   const [foodName, setFoodName] = useState("");
   const [foodType, setFoodType] = useState<"Veg" | "Non-Veg">("Veg");
   const [quantityVal, setQuantityVal] = useState("");
@@ -100,6 +102,9 @@ export function DonorDonate() {
         imageUrl,
         status: "pending",
         ngoAssigned: null,
+        donorId: currentUser?.uid || "demo-donor-101",
+        donorName: userProfile?.orgName || userProfile?.displayName || "Green Bites Bistro",
+        donorEmail: currentUser?.email || "donor@resqmeal.org",
         createdAt: serverTimestamp(),
       });
 

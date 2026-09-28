@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Store,
   Mail,
@@ -7,17 +7,54 @@ import {
   ChefHat,
   User,
   Lock,
-  ExternalLink,
   Leaf,
+  Loader2,
+  ArrowRight,
+  ShieldCheck,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
 
 export function DonorRegistration() {
   const navigate = useNavigate();
+  const { signup } = useAuth();
 
-  const handleRegister = (e: React.FormEvent) => {
+  const [businessName, setBusinessName] = useState("");
+  const [businessType, setBusinessType] = useState("restaurant");
+  const [address, setAddress] = useState("");
+  const [managerName, setManagerName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/donor-success");
+    if (!email || !password || !businessName || !managerName) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const success = await signup(email, password, "donor", {
+        displayName: managerName,
+        orgName: businessName,
+        address,
+        phone,
+      });
+
+      if (success) {
+        navigate("/donor-success");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -42,7 +79,7 @@ export function DonorRegistration() {
             Partner with Us
           </h2>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-            Register your food business to start donating surplus food.
+            Register your food business to start donating surplus food to verified shelters and NGOs.
           </p>
         </div>
 
@@ -57,7 +94,7 @@ export function DonorRegistration() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      Business Name
+                      Business Name *
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -65,9 +102,11 @@ export function DonorRegistration() {
                       </div>
                       <input
                         type="text"
+                        required
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
                         placeholder="e.g. Green Bites Restaurant"
                         className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-resq-green"
-                        required
                       />
                     </div>
                   </div>
@@ -80,28 +119,32 @@ export function DonorRegistration() {
                         <ChefHat className="w-5 h-5 text-gray-400" />
                       </div>
                       <select
+                        value={businessType}
+                        onChange={(e) => setBusinessType(e.target.value)}
                         className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-resq-green appearance-none text-gray-600"
                         required
                       >
-                        <option value="">Select Type</option>
                         <option value="restaurant">Restaurant</option>
                         <option value="cafe">Cafe / Bakery</option>
                         <option value="hotel">Hotel / Catering</option>
                         <option value="supermarket">
                           Supermarket / Grocery
                         </option>
+                        <option value="individual">Individual Donor</option>
                       </select>
                     </div>
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      Address
+                      Address *
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-top pt-3.5 pointer-events-none">
                         <MapPin className="w-5 h-5 text-gray-400" />
                       </div>
                       <textarea
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
                         placeholder="Full address of the pickup location"
                         rows={2}
                         className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-resq-green resize-none"
@@ -114,12 +157,12 @@ export function DonorRegistration() {
 
               <div className="mb-10 pb-6 border-b border-gray-100">
                 <h3 className="text-xl font-bold text-resq-dark mb-6 flex items-center gap-2">
-                  <User className="w-6 h-6 text-resq-green" /> Contact Details
+                  <User className="w-6 h-6 text-resq-green" /> Contact & Account Details
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      Manager Name
+                      Manager / Contact Name *
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -127,15 +170,17 @@ export function DonorRegistration() {
                       </div>
                       <input
                         type="text"
+                        required
+                        value={managerName}
+                        onChange={(e) => setManagerName(e.target.value)}
                         placeholder="Full name"
                         className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-resq-green"
-                        required
                       />
                     </div>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      Phone Number
+                      Phone Number *
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -143,15 +188,17 @@ export function DonorRegistration() {
                       </div>
                       <input
                         type="tel"
+                        required
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
                         placeholder="+91 98765 43210"
                         className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-resq-green"
-                        required
                       />
                     </div>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      Email Address
+                      Email Address (Login Username) *
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -159,15 +206,17 @@ export function DonorRegistration() {
                       </div>
                       <input
                         type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         placeholder="manager@restaurant.com"
                         className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-resq-green"
-                        required
                       />
                     </div>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      Password
+                      Password (min. 6 characters) *
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -175,67 +224,42 @@ export function DonorRegistration() {
                       </div>
                       <input
                         type="password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         placeholder="Create a strong password"
                         className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-resq-green"
-                        required
                       />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="mb-10">
-                <div className="bg-[#f0f5ee] border border-[#d1e3ca] rounded-2xl p-6 flex items-start gap-4">
-                  <div className="w-6 h-6 rounded-full bg-resq-green text-white flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-resq-dark mb-1">
-                      Food Safety Pledge
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-3">
-                      By registering, I confirm that all food donated through
-                      ResQMeal will meet local health and safety standards, will
-                      be stored properly, and will be fit for consumption.
-                    </p>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        required
-                        className="w-4 h-4 text-resq-green border-gray-300 rounded focus:ring-resq-green"
-                      />
-                      <span className="text-sm font-semibold text-resq-dark">
-                        I agree to the Food Safety Guidelines
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <Link
-                  to="/donor-portal"
-                  className="text-gray-500 hover:text-resq-dark font-medium text-sm flex items-center gap-1 w-full sm:w-auto justify-center"
+                  to="/auth?role=donor"
+                  className="text-sm font-semibold text-resq-dark hover:text-resq-orange transition-colors"
                 >
-                  Cancel
+                  Already registered? Sign in here
                 </Link>
+
                 <button
                   type="submit"
-                  className="w-full sm:w-auto bg-resq-dark text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-resq-dark/90 transition-all shadow-lg shadow-resq-dark/20 text-lg"
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto bg-resq-dark hover:bg-resq-dark/90 text-white font-bold py-3.5 px-8 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95"
                 >
-                  Complete Registration <ExternalLink className="w-5 h-5" />
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Creating Account...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-5 h-5" />
+                      <span>Complete Registration</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               </div>
             </form>

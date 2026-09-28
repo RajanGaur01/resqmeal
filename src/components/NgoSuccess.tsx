@@ -250,7 +250,7 @@ export function NgoSuccess() {
             </div>
           </div>
 
-          <div className="bg-[#fcfaf5] rounded-xl p-5 border border-[#f0e7d5] w-full flex items-center gap-4">
+          <div className="bg-[#fcfaf5] rounded-xl p-5 border border-[#f0e7d5] w-full flex items-center gap-4 mb-6">
             <div className="text-resq-green">
               <ShieldCheck className="w-8 h-8" />
             </div>
@@ -261,6 +261,14 @@ export function NgoSuccess() {
               <span className="text-resq-orange block mt-1">❤</span>
             </p>
           </div>
+
+          <Link
+            to="/ngo/dashboard"
+            className="w-full bg-[#153e26] hover:bg-[#11311b] text-white py-3.5 rounded-xl font-bold flex justify-center items-center gap-2 transition-all shadow-md text-base"
+          >
+            <span>Proceed to NGO Dashboard</span>
+            <CheckCircle2 className="w-5 h-5" />
+          </Link>
         </div>
       </div>
 

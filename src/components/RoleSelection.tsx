@@ -90,7 +90,7 @@ export function RoleSelection() {
             </div>
 
             <Link
-              to="/donor-portal"
+              to="/auth?role=donor"
               className="w-full min-h-[48px] bg-resq-dark text-white py-3.5 px-4 rounded-xl md:rounded-full flex items-center justify-center font-medium hover:bg-resq-dark/90 active:scale-[0.99] transition-all group shadow-sm"
             >
               Continue as Donor

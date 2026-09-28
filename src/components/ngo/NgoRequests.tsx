@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { collection, query, onSnapshot, writeBatch, doc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 
 interface Donation {
@@ -33,6 +34,7 @@ interface Donation {
 }
 
 export function NgoRequests() {
+  const { currentUser, userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState("available");
   const [donations, setDonations] = useState<Donation[]>([]);
 
@@ -64,9 +66,11 @@ export function NgoRequests() {
     try {
       const batch = writeBatch(db);
       const donationRef = doc(db, "donations", id);
+      const assignedName = userProfile?.orgName || userProfile?.displayName || "Hope Feed Foundation";
       batch.update(donationRef, {
         status: "accepted",
-        ngoAssigned: "Helping Hands NGO", // Placeholder NGO name
+        ngoAssigned: assignedName,
+        ngoId: currentUser?.uid || "demo-ngo-202",
       });
       await batch.commit();
       toast.success("Donation accepted successfully! You can contact the donor now.");
